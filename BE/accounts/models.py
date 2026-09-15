@@ -40,3 +40,40 @@ class FinancialAccount(models.Model):
 
     def __str__(self) -> str:
         return f"{self.name} ({self.account_type}) - {self.household.name}"
+
+
+class AccountMember(models.Model):
+
+    class Permission(models.TextChoices):
+        OWNER = "OWNER", "Owner"
+        EDITOR = "EDITOR", "Editor"
+        VIEWER = "VIEWER", "Viewer"
+        
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    account = models.ForeignKey(
+        FinancialAccount, on_delete=models.CASCADE, related_name="members"
+    )
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="account_memberships",
+    )
+    permission = models.CharField(
+        max_length=10, choices=Permission.choices,
+        default=Permission.VIEWER
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "user"],
+                name="unique_account_user_membership"
+            )
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.user.email} - {self.permission} on {self.account.name}"
