@@ -1,0 +1,9 @@
+ai_personal_finance_assistant_genai.md
+ai_personal_finance_foundation.md
+
+db.sqlite3
+
+pyproject.toml
+uv.lock
+
+.venv/

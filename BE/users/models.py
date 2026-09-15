@@ -34,7 +34,7 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = None
     email = models.EmailField("email address", unique=True)
-    first_name = models.Charfield(max_length=150, blank=True)
+    first_name = models.CharField(max_length=150, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
