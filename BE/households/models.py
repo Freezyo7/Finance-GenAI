@@ -1,6 +1,9 @@
 import uuid
+import secrets
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
+from datetime import timedelta
 
 # Create your models here.
 
@@ -93,3 +96,55 @@ class HouseholdMember(models.Model):
         
     def __str__(self) -> str:
         return f"{self.user.email} - {self.role} ({self.relationship}) in {self.household.name}"
+
+
+def default_invitation_expiry():
+    return timezone.now() + timedelta(days=7)
+
+class HouseholdInvitaion(models.Model):
+
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        EXPIRED = "EXPIRED", "Expired"
+        REVOKED = "REVOKED", "Revoked"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    household = models.ForeignKey(
+        Household,
+        on_delete=models.CASCADE,
+        related_name="invitaions"
+    )
+    
+    email = models.EmailField()
+    role = models.CharField(
+        max_length=10,
+        choices=HouseholdMember.Role.choices,
+        default=HouseholdMember.Role.MEMBER,
+    )
+    relationship = models.CharField(
+        max_length=15,
+        choices=HouseholdMember.Relationship.choices,
+        default=HouseholdMember.Relationship.OTHER,
+    )
+    token = models.CharField(max_length=64, unique=True, default=secrets.token_urlsafe)
+    status = models.CharField(
+        max_length=15, choices=Status.choices, default=Status.PENDING
+    )
+    expires_at = models.DateTimeField(default=default_invitation_expiry)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_invitations"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Household Invitation"
+        verbose_name_plural = "Household Invitations"
+    def is_valid(self) -> bool:
+        return self.status == self.Status.PENDING and self.expires_at > timezone.now()
+    def __str__(self) -> str:
+        return f"Invite {self.email} -> {self.household.name} ({self.status})"

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts',
     'transactions',
     'budgets',
+    'ai_assistant',
 ]
 
 AUTH_USER_MODEL = "users.User"

@@ -8,7 +8,7 @@ from transactions.models import Category
 # Create your models here.
 
 class Budget(models.Model):
-    class Period(models.Model):
+    class Period(models.TextChoices):
         MONTHLY = "MONTHLY", "Monthly"
         YEARLY = "YEARLY", "Yearly"
         CUSTOM = "CUSTOM", "Custom"
@@ -52,6 +52,6 @@ class Budget(models.Model):
         ordering = ["-start_date"]
         verbose_name = "Budget"
         verbose_name_plural = "Budgets"
-        
+
     def __str__(self) -> str:
         return f"{self.household.name} - {self.category.name}: {self.amount} ({self.period})"
