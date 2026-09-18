@@ -101,7 +101,7 @@ class HouseholdMember(models.Model):
 def default_invitation_expiry():
     return timezone.now() + timedelta(days=7)
 
-class HouseholdInvitaion(models.Model):
+class HouseholdInvitation(models.Model):
 
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pending"
