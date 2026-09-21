@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
-from pickle import TRUE
 from datetime import timedelta
 from django.db import transaction
 from pathlib import Path
@@ -42,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'users',
     'households',
     'accounts',
