@@ -19,7 +19,7 @@ from .serializers import (
 
 # Create your views here.
 
-class HousholdListCreateView(generics.ListCreateAPIView):
+class HouseholdListCreateView(generics.ListCreateAPIView):
     """GET /api/households/ - list all households the user belongs to.
     POST /api/households/ - Create a new Household (Personal or Family) """
 
@@ -34,7 +34,7 @@ class HousholdListCreateView(generics.ListCreateAPIView):
 
 class HouseholdDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/households/<id> - Manage a specific household."""
-    query_set = Household.objects.all()
+    queryset = Household.objects.all()
     serializer_class = HouseholdSerializer
 
     def get_permissions(self) -> list[Any]:
@@ -42,11 +42,11 @@ class HouseholdDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [IsAuthenticated(), IshouseholdAdminOrOwner()]
         return [IsAuthenticated(), IsHouseholdMember()]
 
-class HouseholdMemberListCreateView(generics.ListAPIView):
+class HouseholdMemberListView(generics.ListAPIView):
     """GET /api/households/<id>/members/ - list all active members in a households """
 
-    permissions_classes = [IsAuthenticated, IsHouseholdMember]
-    serializers_class = HouseholdMemberSerializer
+    permission_classes = [IsAuthenticated, IsHouseholdMember]
+    serializer_class = HouseholdMemberSerializer
 
     def get_queryset(self) -> QuerySet[HouseholdMember]:
         household_id = self.kwargs["households_id"]
@@ -59,6 +59,17 @@ class HouseholdMemberListCreateView(generics.ListAPIView):
         household = get_object_or_404(Household, id=self.kwargs["household_id"])
         self.check_object_permissions(self.request, household)
         return household
+
+class HouseholdMemberDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [IsAuthenticated, IshouseholdAdminOrOwner]
+    serializer_class = HouseholdMemberSerializer
+    lookup_url_kwarg = "member_id"
+
+    def get_queryset(self) -> QuerySet[HouseholdMember]:
+        return HouseholdMember.objects.filter(
+            household_id = self.kwargs["household_id"]
+        ).select_related("user")
 
 class HouseholdInvitationListCreateView(generics.ListCreateAPIView):
     """POST /api/household/<id>/invitations/ - Invite a member (Admin/Owner only).
