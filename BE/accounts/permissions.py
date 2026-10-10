@@ -63,7 +63,7 @@ class IsAccountOwner(permissions.BasePermission):
 
     def has_object_permission(self, request:Request, view:APIView, obj:Any) -> bool:
 
-        if isinstance(self, FinancialAccount):
+        if isinstance(obj, FinancialAccount):
             account = obj
         
         else:
@@ -74,7 +74,7 @@ class IsAccountOwner(permissions.BasePermission):
         
         return AccountMember.objects.filter(
             account=account,
-            use=request.user,
+            user=request.user,
             permission=AccountMember.Permission.OWNER
         ).exists()
         
