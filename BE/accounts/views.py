@@ -39,7 +39,7 @@ class FinancialAccountListCreateView(generics.ListCreateAPIView):
         self.check_object_permissions(self.request, household)
         return household
 
-    def get_query(self) -> QuerySet[FinancialAccount]:
+    def get_queryset(self) -> QuerySet[FinancialAccount]:
         household = self.get_household()
         user = self.request.user
 
@@ -47,16 +47,16 @@ class FinancialAccountListCreateView(generics.ListCreateAPIView):
         is_household_owner = HouseholdMember.objects.filter(
             household=household,
             user=user,
-            role=HouseholdMember.Role.Owner,
+            role=HouseholdMember.Role.OWNER,
             status=HouseholdMember.Status.ACTIVE,
         ).exists()
 
         if is_household_owner:
-            return FinancialAccount.objects.filter(household=household).prefetch_related("member__user")
+            return FinancialAccount.objects.filter(household=household).prefetch_related("members__user")
 
         return FinancialAccount.objects.filter(
             household=household,
-            member__user=user,
+            members__user=user,
         ).prefetch_related("members__user").distinct()
 
     def get_serializer_context(self) -> dict[str, Any]:
@@ -67,6 +67,12 @@ class FinancialAccountListCreateView(generics.ListCreateAPIView):
 class FinancialAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE /api/accounts/<id> - View, edit, or delete a specific account."""
 
-    queryset = FinancialAccount.objects.all().prefectch_related("members__user")
+    queryset = FinancialAccount.objects.all().prefetch_related("members__user")
     serializer_class = FinancialAccountSerializer
 
+    def get_permissions(self) -> list[Any]:
+
+        if self.request.method in ["PUT", "PATCH", "DELETE"]:
+            return [IsAuthenticated(), IsAccountOwner()]
+
+        return [IsAuthenticated(), HasAccountAccess()]
