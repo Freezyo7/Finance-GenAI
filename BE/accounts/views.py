@@ -76,3 +76,30 @@ class FinancialAccountDetailView(generics.RetrieveUpdateDestroyAPIView):
             return [IsAuthenticated(), IsAccountOwner()]
 
         return [IsAuthenticated(), HasAccountAccess()]
+
+class ShareAccountView(generics.GenericAPIView):
+
+    serializer_class = ShareAccountSerializer
+    permission_classes = [IsAuthenticated, IsAccountOwner]
+
+    def get_account(self) -> FinancialAccount:
+        account = get_object_or_404(
+            FinancialAccount,
+            id=self.kwargs["account_id"]
+        )
+        self.check_object_permissions(self.request, account)
+        return account 
+
+    def get_serializer_context(self) -> dict[str, Any]:
+        context = super().get_serializer_context()
+        context["account"] = self.get_account()
+        return context
+
+    def post(self, request:Request, *args:Any, **kawrgs:Any) -> Response:
+        serializer = self.get_serializer_context()
+        serializer.is_valid(raise_exception=True)
+        member = serializer.save()
+        return Response(
+            AccountMemberSerializer(member).data,
+            status=status.HTTP_200_OK,
+        )
